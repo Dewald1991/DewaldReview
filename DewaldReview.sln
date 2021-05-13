@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DewaldReview", "DewaldReview\DewaldReview.csproj", "{374ED76F-440E-4877-80F7-E3AB725ACCCA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DewaldReview.Web", "DewaldReview\DewaldReview.Web.csproj", "{374ED76F-440E-4877-80F7-E3AB725ACCCA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
