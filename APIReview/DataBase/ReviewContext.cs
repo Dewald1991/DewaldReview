@@ -7,7 +7,7 @@ namespace APIReview.DataBase
     public class ReviewContext : DbContext
     {
 
-        public ReviewContext() : base("DefaultConnection")
+        public ReviewContext() : base("APIConString")
         {
         }
 

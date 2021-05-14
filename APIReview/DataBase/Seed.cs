@@ -1,4 +1,4 @@
-﻿using DewaldReview.Models;
+﻿using APIReview.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
@@ -8,12 +8,12 @@ using System.Text;
 using System.Web;
 
 
-namespace DewaldReview.DataBase
+namespace APIReview.DataBase
 {
     public class Seed
     {
         
-        public void SeedData(DewaldReview.DataBase.ReviewContext context)
+        public void SeedData(APIReview.DataBase.ReviewContext context)
         {
             try
             {
