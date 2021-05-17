@@ -11,6 +11,7 @@ namespace DewaldReview.Models
         public string EmployeeName { get; set; }
         public int EmploymentStatusID { get; set; }
         public virtual  EmploymentStatus EmploymentStatus { get; set; }
+        public string ExternalReference { get; set; }
 
 
     }

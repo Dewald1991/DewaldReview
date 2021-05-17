@@ -6,34 +6,43 @@ using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web.Http;
 using System.Web.Http.Description;
 using APIReview.DataBase;
 using APIReview.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace APIReview.Controllers
 {
     public class EmployeesController : ApiController
     {
+        public  readonly Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private ReviewContext db = new ReviewContext();
 
         // GET: api/Employees
-        public string Get()
+        public HttpResponseMessage Get()
         {
+            Logger.Debug("Get Requested");
             List<Employee> Employees = db.Employees.ToList();
 
 
-
             string ReturnedEmployees = JsonConvert.SerializeObject(Employees);
+            var response = this.Request.CreateResponse(HttpStatusCode.OK);
 
-            return ReturnedEmployees;
+            Logger.Debug("Employees sending back: "+ ReturnedEmployees);
+            response.Content = new StringContent(ReturnedEmployees, Encoding.UTF8, "application/json");
+            return response;
+
         }
 
         // GET: api/Employees/5
         [ResponseType(typeof(Employee))]
         public IHttpActionResult GetEmployee(string id)
         {
+            Logger.Debug("Employee records requested for: "+ id);
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {
@@ -47,6 +56,8 @@ namespace APIReview.Controllers
         [ResponseType(typeof(void))]
         public IHttpActionResult PutEmployee(string id, Employee employee)
         {
+            Logger.Debug("Request to edit employee: "+ id);
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -62,9 +73,11 @@ namespace APIReview.Controllers
             try
             {
                 db.SaveChanges();
+                Logger.Debug("Changed to Status: " + employee.EmploymentStatusID);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException e)
             {
+                Logger.Debug("Failed to update: "+ e.Message);
                 if (!EmployeeExists(id))
                 {
                     return NotFound();
@@ -80,38 +93,53 @@ namespace APIReview.Controllers
 
         // POST: api/Employees
         [ResponseType(typeof(Employee))]
-        public IHttpActionResult PostEmployee(Employee employee)
+        public HttpResponseMessage PostEmployee(Employee employee)
         {
+            Logger.Debug("New Employee: "+ employee);
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest); 
             }
 
+            employee.EmployeeID = Guid.NewGuid().ToString();
+
+           
             db.Employees.Add(employee);
 
             try
             {
                 db.SaveChanges();
+                Logger.Debug("Employee added with ID: "+employee.EmployeeID);
             }
             catch (DbUpdateException)
             {
                 if (EmployeeExists(employee.EmployeeID))
                 {
-                    return Conflict();
+                    return this.Request.CreateResponse(HttpStatusCode.Conflict);
                 }
                 else
                 {
                     throw;
                 }
             }
+            
 
-            return CreatedAtRoute("DefaultApi", new { id = employee.EmployeeID }, employee);
+
+            
+
+            string ReturnedEmployees = JsonConvert.SerializeObject(employee);
+            var response = this.Request.CreateResponse(HttpStatusCode.OK);
+
+
+            response.Content = new StringContent(ReturnedEmployees, Encoding.UTF8, "application/json");
+            return response;
         }
 
         // DELETE: api/Employees/5
         [ResponseType(typeof(Employee))]
         public IHttpActionResult DeleteEmployee(string id)
         {
+            Logger.Debug("Request to delete employee with ID: "+ id);
             Employee employee = db.Employees.Find(id);
             if (employee == null)
             {
@@ -120,7 +148,7 @@ namespace APIReview.Controllers
 
             db.Employees.Remove(employee);
             db.SaveChanges();
-
+            Logger.Debug("Employee Deleted");
             return Ok(employee);
         }
 

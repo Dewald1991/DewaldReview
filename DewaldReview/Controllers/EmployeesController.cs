@@ -4,10 +4,12 @@ using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using DewaldReview.DataBase;
 using DewaldReview.Models;
+using DewaldReview.Services.Clients;
 
 namespace DewaldReview.Controllers
 {
@@ -21,6 +23,14 @@ namespace DewaldReview.Controllers
             var employees = db.Employees.Include(e => e.EmploymentStatus);
             return View(employees.ToList());
         }
+
+        // GET: Employees
+        public async Task <ActionResult> ExternalIndex()
+        {
+            var employees = await API.GetAllEmployees();
+            return View(employees.ToList());
+        }
+
 
         // GET: Employees/Details/5
         public ActionResult Details(string id)
@@ -49,12 +59,20 @@ namespace DewaldReview.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "EmployeeID,EmployeeName,EmploymentStatusID")] Employee employee)
+        public async Task<ActionResult> Create(Employee employee)
         {
             if (ModelState.IsValid)
             {
                 db.Employees.Add(employee);
                 db.SaveChanges();
+                string sExternalID = await API.CreateNewEmployee(employee.EmployeeID);
+                if (!string.IsNullOrEmpty(sExternalID))
+                {
+                    employee.ExternalReference = sExternalID;
+                    db.Entry(employee).State = EntityState.Modified;
+                    db.SaveChanges();
+                }
+
                 return RedirectToAction("Index");
             }
 
@@ -83,12 +101,14 @@ namespace DewaldReview.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "EmployeeID,EmployeeName,EmploymentStatusID")] Employee employee)
+        public async Task<ActionResult> Edit( Employee employee)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(employee).State = EntityState.Modified;
                 db.SaveChanges();
+                await API.UpdateEmployeeStatus(employee.EmployeeID);
+                
                 return RedirectToAction("Index");
             }
             ViewBag.EmploymentStatusID = new SelectList(db.EmploymentStatus, "EmploymentStatusID", "Name", employee.EmploymentStatusID);
@@ -113,9 +133,11 @@ namespace DewaldReview.Controllers
         // POST: Employees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(string id)
+        public async Task<ActionResult> DeleteConfirmed(string id)
         {
             Employee employee = db.Employees.Find(id);
+            await API.DeleteExternalEmployee(employee.EmployeeID);
+
             db.Employees.Remove(employee);
             db.SaveChanges();
             return RedirectToAction("Index");
